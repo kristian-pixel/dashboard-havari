@@ -1,15 +1,15 @@
-# DSRS Assistancer v7
+# DSRS Assistancer v8
 
-Offentlig side: `index.html`  
-Intern side: `internal.html`  
-Intern kode: `dsrs2026`
+Offentlig side:
+- index.html
 
-Nyt i v7:
-- Offentlig disclaimer/"Om data og kilde"
-- Dag/nat bruger nu tidspunkt i både offentlig og intern data
-- Tydelig mørklægning af kort ved nat/skumring
-- Stationsmarkører som redningshus
-- Årø vises som spøgelse
-- Redningsbåd sejler fra station til assistancepunkt
+Intern side:
+- internal.html
+- kode: dsrs2026
 
-Upload indholdet af zip-filen til repoets root. Ikke selve zip-filen.
+Nyt i v8:
+- Tydelig offentlig disclaimer/kildeboks øverst
+- Tydelig krediteringstekst til presse og samarbejdspartnere
+- Forklaring af havariårsager under grafen
+- Bemærkning om assistance vs. akut fare / 1-1-2
+- Beholder v7-funktioner: stationer på kort, Årø-spøgelse, redningsbåd-rute, vejr og dag/nat.

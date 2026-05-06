@@ -90,3 +90,23 @@
 .stationHouseIcon.ghost{background:#1f2937;border-color:#c084fc;color:white;filter:drop-shadow(0 2px 7px rgba(124,58,237,.55))}
 .stationIcon{font-size:20px;background:#fff;color:#001f3f;border:2px solid #ff6a00}
 @media print{.infoBtn,.modal{display:none!important}.disclaimerCard{break-inside:avoid}}
+
+
+/* v8: clearer public data disclaimer and cause explanations */
+.creditNotice{
+  display:grid;
+  grid-template-columns:1.5fr 1fr;
+  gap:18px;
+  align-items:stretch;
+  background:linear-gradient(135deg,#001f3f,#063b70);
+  color:white;
+  border-radius:24px;
+  padding:22px;
+  margin:0 0 18px;
+  box-shadow:0 12px 28px rgba(0,31,63,.16);
+  border:1px solid rgba(255,255,255,.14);
+}
+.creditNotice h2{margin:0 0 8px;font-size:26px}.creditNotice p{margin:0;line-height:1.55;color:#d7e4f5}.creditNotice .eyebrow{margin-bottom:6px}.creditBox{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);border-radius:18px;padding:16px;display:grid;gap:10px;align-content:center}.creditBox strong{font-size:17px;line-height:1.35}.creditBox span{color:#d7e4f5;font-weight:800}
+.causeExplainer{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}.causeExplainer h3{color:var(--navy);font-size:16px;margin:0 0 10px}.causeExplainer dl{display:grid;gap:8px;margin:0}.causeExplainer dt{font-weight:900;color:var(--navy)}.causeExplainer dd{margin:2px 0 8px;color:#475467;line-height:1.42}.assistNote{background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:12px;margin:12px 0 0;color:#7c2d12;line-height:1.45}.modalCredit{background:#fff7ed;border:1px solid #fed7aa;border-left:6px solid var(--orange);border-radius:16px;padding:14px;margin:14px 0;display:grid;gap:6px}.modalCredit span{font-weight:900;color:var(--navy)}.disclaimerCard{border-left:8px solid var(--orange)!important;background:linear-gradient(135deg,#ffffff,#fff7ed)!important}.disclaimerCard h2{font-size:24px}.disclaimerCard .sourceLine{background:#001f3f;color:white;border-radius:14px;padding:12px;display:inline-block}
+@media(max-width:900px){.creditNotice{grid-template-columns:1fr}}
+@media print{.creditNotice{background:white;color:#001f3f;border:2px solid #001f3f;box-shadow:none}.creditNotice p,.creditBox span{color:#333}.creditBox{border:1px solid #999;background:white}.causeExplainer{break-inside:avoid}}
