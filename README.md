@@ -1,24 +1,7 @@
-# DSRS Assistancer v3 clean
+# DSRS Assistancer v4.1
 
-Upload **indholdet** af denne mappe til repoets root. Upload ikke zip-filen.
+Offentlig side: `index.html`
+Intern side: `internal.html`
+Intern kode: `dsrs2026`
 
-Offentlig side:
-- `index.html`
-- URL: `https://kristian-pixel.github.io/dashboard-havari/`
-
-Intern side:
-- `internal.html`
-- URL: `https://kristian-pixel.github.io/dashboard-havari/internal.html`
-- kode: `dsrs2026`
-
-Vigtige filer:
-- `styles.css`
-- `app-public.js`
-- `app-internal.js`
-- `assets/assistancer-public.json`
-- `assets/assistancer-internal.json`
-
-GitHub Pages:
-- Source: Deploy from a branch
-- Branch: main
-- Folder: / (root)
+Rettelse i v4.1: Intern reaktionstid beregnes som alarmeringstid → udrykningstid. Intern assistancetid beregnes som udrykningstid → hjemkomst. Begge beregninger håndterer tider, der går over midnat.

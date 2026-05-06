@@ -12,3 +12,7 @@
   height:300px !important;
   max-height:300px !important;
 }
+
+/* v4 date/quarter filters */
+.controls{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+.controls input[type="date"]{width:100%;box-sizing:border-box;}
