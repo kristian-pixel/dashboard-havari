@@ -16,3 +16,27 @@
 /* v4 date/quarter filters */
 .controls{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
 .controls input[type="date"]{width:100%;box-sizing:border-box;}
+
+/* v5 weather + proper day/night overlay */
+.nightOverlay{
+  background:radial-gradient(circle at 50% 40%, rgba(8,24,58,.20), rgba(0,8,28,.68));
+  backdrop-filter:saturate(.75) brightness(.72);
+}
+.weatherBadge{
+  transition:background .2s, border-color .2s, color .2s;
+}
+.mapWrap::after{
+  content:'Dag/nat og vejr vises for det seneste punkt på tidslinjen';
+  position:absolute;
+  left:14px;
+  bottom:14px;
+  z-index:650;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(0,31,63,.12);
+  border-radius:999px;
+  padding:7px 11px;
+  font-size:12px;
+  font-weight:800;
+  color:#28415f;
+  pointer-events:none;
+}
