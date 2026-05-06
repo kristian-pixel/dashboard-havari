@@ -23,25 +23,34 @@ window.DSRSWeather = (() => {
   const cacheKey = r => `dsrs-weather-v2:${round(r.lat)}:${round(r.lon)}:${r.date}:${hourOf(r)}`;
   const round = v => Math.round(Number(v) * 100) / 100;
   const hourOf = r => {
-    const t = r.alarm_time || r.departure_time || '12:00';
+    const t = cleanTime(r.alarm_time || r.departure_time || r.home_time || '12:00');
     const m = String(t).match(/^(\d{1,2})/);
     const h = m ? Math.max(0, Math.min(23, Number(m[1]))) : 12;
     return String(h).padStart(2,'0') + ':00';
   };
   const eventDate = r => {
-    const time = r.alarm_time || r.departure_time || '12:00';
-    return new Date(`${r.date}T${time.length === 5 ? time + ':00' : time}`);
+    const time = cleanTime(r.alarm_time || r.departure_time || r.home_time || '12:00');
+    return new Date(`${r.date}T${time}`);
   };
+  function cleanTime(t){
+    const s = String(t || '12:00').trim();
+    const m = s.match(/^(\d{1,2})(?::(\d{1,2}))?(?::(\d{1,2}))?/);
+    if(!m) return '12:00:00';
+    const hh = String(Math.max(0, Math.min(23, Number(m[1])))).padStart(2,'0');
+    const mm = String(Math.max(0, Math.min(59, Number(m[2]||0)))).padStart(2,'0');
+    const ss = String(Math.max(0, Math.min(59, Number(m[3]||0)))).padStart(2,'0');
+    return `${hh}:${mm}:${ss}`;
+  }
   function dayNightInfo(r){
-    const h = parseInt((r.alarm_time || r.departure_time || '12:00').slice(0,2),10);
+    const h = parseInt(cleanTime(r.alarm_time || r.departure_time || r.home_time || '12:00').slice(0,2),10);
     const fallbackNight = Number.isNaN(h) ? false : (h >= 22 || h < 6);
     const d = eventDate(r);
     if (!window.SunCalc || !r.lat || !r.lon || isNaN(d)) {
-      return {label: fallbackNight ? 'Nat' : 'Dag', icon: fallbackNight ? '🌙' : '☀️', overlay: fallbackNight ? 0.55 : 0};
+      return {label: fallbackNight ? 'Nat' : 'Dag', icon: fallbackNight ? '🌙' : '☀️', overlay: fallbackNight ? 0.78 : 0};
     }
     const times = SunCalc.getTimes(d, Number(r.lat), Number(r.lon));
-    if (d < times.dawn || d > times.dusk) return {label:'Nat', icon:'🌙', overlay:0.58};
-    if (d < times.sunrise || d > times.sunset) return {label:'Skumring', icon:'🌘', overlay:0.30};
+    if (d < times.dawn || d > times.dusk) return {label:'Nat', icon:'🌙', overlay:0.78};
+    if (d < times.sunrise || d > times.sunset) return {label:'Skumring', icon:'🌘', overlay:0.45};
     return {label:'Dag', icon:'☀️', overlay:0};
   }
   function cachedLabel(r){

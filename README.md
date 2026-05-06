@@ -1,12 +1,15 @@
-# DSRS Assistancer v6
+# DSRS Assistancer v7
 
-Offentlig side: `index.html`
+Offentlig side: `index.html`  
+Intern side: `internal.html`  
+Intern kode: `dsrs2026`
 
-Intern side: `internal.html`
-Kode: `dsrs2026`
+Nyt i v7:
+- Offentlig disclaimer/"Om data og kilde"
+- Dag/nat bruger nu tidspunkt i både offentlig og intern data
+- Tydelig mørklægning af kort ved nat/skumring
+- Stationsmarkører som redningshus
+- Årø vises som spøgelse
+- Redningsbåd sejler fra station til assistancepunkt
 
-Nyt i v6:
-- stærkere og synlig dag/nat-effekt på kortet
-- redningsbåd animerer fra den valgte DSRS-station til assistancepunktet
-- stationernes adresser/koordinater ligger i `station-data.js`
-- vejrdata fortsat via Open-Meteo, cachet i browseren
+Upload indholdet af zip-filen til repoets root. Ikke selve zip-filen.
