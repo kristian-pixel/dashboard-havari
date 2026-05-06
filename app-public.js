@@ -18,12 +18,60 @@ function nightOpacity(r){return DSRSWeather.dayNightInfo(r).overlay;}
 function weatherLabel(r){return DSRSWeather.cachedLabel(r);}
 function updateWeatherBadgeForRecord(r){return DSRSWeather.updateBadge(document.getElementById('weatherBadge'), r);}
 
-let raw=[],filtered=[],charts={},map,markers=[],boatMarker=null,playTimer=null,currentStep=0;
+function setNightEffect(r){
+  const overlay=document.getElementById('nightOverlay');
+  const info=DSRSWeather.dayNightInfo(r);
+  const op=Number(info.overlay||0);
+  if(overlay) overlay.style.opacity = op ? Math.min(.88, op + .18) : 0;
+  if(map && map.getPane('tilePane')){
+    const pane=map.getPane('tilePane');
+    pane.style.filter = op ? `brightness(${Math.max(.36, 1 - op*.82)}) saturate(${Math.max(.45, 1 - op*.36)}) contrast(${1 + op*.18})` : '';
+  }
+  if(map && map.getContainer()) map.getContainer().classList.toggle('nightMap', op > .1);
+}
+function clearRescueRoute(){
+  if(typeof boatTimer!=='undefined' && boatTimer){ cancelAnimationFrame(boatTimer); boatTimer=null; }
+  [typeof boatMarker!=='undefined'?boatMarker:null, typeof stationMarker!=='undefined'?stationMarker:null, typeof routeLine!=='undefined'?routeLine:null].forEach(x=>{ if(x && map) map.removeLayer(x); });
+  boatMarker=null; stationMarker=null; routeLine=null;
+}
+function lerp(a,b,t){ return a + (b-a)*t; }
+function boatIcon(html='🚤'){
+  return L.divIcon({className:'boatIcon',html,iconSize:[30,30],iconAnchor:[15,15]});
+}
+function stationIcon(){
+  return L.divIcon({className:'stationIcon',html:'⚓',iconSize:[26,26],iconAnchor:[13,13]});
+}
+function showRescueRoute(r){
+  clearRescueRoute();
+  if(!r || !Number(r.lat) || !Number(r.lon)) return;
+  const st = window.DSRSStations?.lookup(r.station);
+  const target=[Number(r.lat), Number(r.lon)];
+  if(!st){
+    boatMarker=L.marker(target,{icon:boatIcon('🚤')}).addTo(map).bindTooltip('Assistancepunkt');
+    return;
+  }
+  const start=[Number(st.lat), Number(st.lon)];
+  stationMarker=L.marker(start,{icon:stationIcon()}).addTo(map).bindTooltip(`${st.name}<br>${st.address}`);
+  routeLine=L.polyline([start,target],{color:'#ff6a00',weight:3,opacity:.9,dashArray:'7 8',className:'rescueRoute'}).addTo(map);
+  boatMarker=L.marker(start,{icon:boatIcon('🚤')}).addTo(map).bindTooltip(`${st.name} → assistance`);
+  const startTime=performance.now();
+  const duration=900;
+  const step=(now)=>{
+    const t=Math.min(1,(now-startTime)/duration);
+    const eased=1-Math.pow(1-t,3);
+    boatMarker.setLatLng([lerp(start[0],target[0],eased), lerp(start[1],target[1],eased)]);
+    if(t<1) boatTimer=requestAnimationFrame(step);
+  };
+  boatTimer=requestAnimationFrame(step);
+}
+
+
+let raw=[],filtered=[],charts={},map,markers=[],boatMarker=null,stationMarker=null,routeLine=null,boatTimer=null,playTimer=null,currentStep=0;
 async function init(){const res=await fetch('assets/assistancer-public.json');raw=(await res.json()).records;setupFilterControls(raw,applyFilters);setupMap();document.getElementById('playBtn').onclick=togglePlay;document.getElementById('timeline').oninput=e=>{currentStep=+e.target.value;renderTimeline();};document.getElementById('exportBtn').onclick=()=>window.print();applyFilters();}
 function applyFilters(){filtered=applyFilterTo(raw);updateDashboard();resetTimeline();}
 function updateDashboard(){document.getElementById('kpiAssists').textContent=dk.format(filtered.length);document.getElementById('kpiPersons').textContent=dk.format(filtered.reduce((s,r)=>s+(r.persons||0),0));let causes=sortedEntries(byCount(filtered,r=>r.cause));document.getElementById('kpiTopCause').textContent=causes[0]?.[0]||'–';let months=sortedEntries(byCount(filtered,r=>r.month));document.getElementById('kpiTopMonth').textContent=monthName(months[0]?.[0]);const monthEntries=Object.entries(byCount(filtered,r=>r.month)).sort().map(([k,v])=>[monthName(k),v]);renderChart(charts,'monthlyChart','bar',monthEntries,'Assistancer');renderChart(charts,'causeChart','doughnut',causes.slice(0,9),'Årsager');document.querySelector('#pressTable tbody').innerHTML=Object.entries(byCount(filtered,r=>`${r.month}|${r.cause}`)).sort().map(([k,v])=>{const [m,c]=k.split('|');return `<tr><td>${monthName(m)}</td><td>${c}</td><td>${dk.format(v)}</td></tr>`}).join('')||'<tr><td colspan="3">Ingen data i det valgte filter.</td></tr>';}
 function setupMap(){map=L.map('map').setView([56.05,10.8],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);}
 function resetTimeline(){const valid=validGeo(filtered);document.getElementById('timeline').max=Math.max(0,valid.length-1);currentStep=valid.length?valid.length-1:0;document.getElementById('timeline').value=currentStep;renderTimeline();}
-function renderTimeline(){markers.forEach(m=>map.removeLayer(m));markers=[];if(boatMarker){map.removeLayer(boatMarker);boatMarker=null;}const valid=validGeo(filtered);const shown=valid.slice(0,currentStep+1);shown.forEach((r,i)=>{const marker=L.circleMarker([r.lat,r.lon],{radius:i===shown.length-1?9:5,weight:2,fillOpacity:.65}).bindPopup(`<strong>${r.date}</strong><br>${r.station}<br>${r.cause}<br>${r.persons??'–'} personer ombord<br>${weatherLabel(r)}`);marker.addTo(map);markers.push(marker);});const overlay=document.getElementById('nightOverlay');if(shown.length){let last=shown[shown.length-1];document.getElementById('timelineLabel').textContent=`Viser ${shown.length} af ${valid.length} – seneste punkt: ${last.date}, ${last.station}, ${last.cause}`;document.getElementById('weatherBadge').textContent=`${DSRSWeather.dayNightInfo(last).icon} ${DSRSWeather.dayNightInfo(last).label} · ${weatherLabel(last)}`;overlay.style.opacity=nightOpacity(last);updateWeatherBadgeForRecord(last);boatMarker=L.marker([last.lat,last.lon],{icon:L.divIcon({className:'boatIcon',html:'🚤',iconSize:[24,24]})}).addTo(map);}else{document.getElementById('timelineLabel').textContent='Ingen punkter i dette filter.';document.getElementById('weatherBadge').textContent='Vejrdata hentes automatisk ved valgt punkt';overlay.style.opacity=0;}}
+function renderTimeline(){markers.forEach(m=>map.removeLayer(m));markers=[];clearRescueRoute();const valid=validGeo(filtered);const shown=valid.slice(0,currentStep+1);shown.forEach((r,i)=>{const marker=L.circleMarker([r.lat,r.lon],{radius:i===shown.length-1?9:5,weight:2,fillOpacity:.65}).bindPopup(`<strong>${r.date}</strong><br>${r.station}<br>${r.cause}<br>${r.persons??'–'} personer ombord<br>${weatherLabel(r)}`);marker.addTo(map);markers.push(marker);});const overlay=document.getElementById('nightOverlay');if(shown.length){let last=shown[shown.length-1];document.getElementById('timelineLabel').textContent=`Viser ${shown.length} af ${valid.length} – seneste punkt: ${last.date}, ${last.station}, ${last.cause}`;document.getElementById('weatherBadge').textContent=`${DSRSWeather.dayNightInfo(last).icon} ${DSRSWeather.dayNightInfo(last).label} · ${weatherLabel(last)}`;setNightEffect(last);updateWeatherBadgeForRecord(last);showRescueRoute(last);}else{document.getElementById('timelineLabel').textContent='Ingen punkter i dette filter.';document.getElementById('weatherBadge').textContent='Vejrdata hentes automatisk ved valgt punkt';overlay.style.opacity=0;if(map&&map.getPane('tilePane'))map.getPane('tilePane').style.filter='';}}
 function togglePlay(){const btn=document.getElementById('playBtn');if(playTimer){clearInterval(playTimer);playTimer=null;btn.textContent='▶ Afspil';return;}currentStep=0;document.getElementById('timeline').value=0;btn.textContent='⏸ Pause';playTimer=setInterval(()=>{const max=+document.getElementById('timeline').max;if(currentStep>=max){togglePlay();return;}currentStep++;document.getElementById('timeline').value=currentStep;renderTimeline();},+document.getElementById('speedRange').value);}
 init();

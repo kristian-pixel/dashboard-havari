@@ -40,3 +40,40 @@
   color:#28415f;
   pointer-events:none;
 }
+
+
+/* v6: stronger night mode + rescue boat route */
+.nightOverlay{
+  z-index:9000;
+  background:linear-gradient(180deg, rgba(0,7,22,.72), rgba(0,12,38,.82));
+  mix-blend-mode:multiply;
+}
+.leaflet-container.nightMap .leaflet-control-container,
+.leaflet-container.nightMap .leaflet-marker-pane,
+.leaflet-container.nightMap .leaflet-overlay-pane{
+  filter:brightness(.95) saturate(.9);
+}
+.boatIcon{
+  font-size:26px;
+  width:30px!important;
+  height:30px!important;
+  line-height:30px;
+  text-align:center;
+  transform:translate(-2px,-2px);
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.55));
+}
+.stationIcon{
+  font-size:22px;
+  width:26px!important;
+  height:26px!important;
+  line-height:26px;
+  text-align:center;
+  background:#001f3f;
+  color:white;
+  border:2px solid #ff6a00;
+  border-radius:999px;
+  box-shadow:0 3px 9px rgba(0,0,0,.35);
+}
+.rescueRoute{
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));
+}
