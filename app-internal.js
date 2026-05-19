@@ -5,6 +5,21 @@ const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
 const median=a=>{if(!a.length)return null;let s=[...a].sort((x,y)=>x-y),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2};
 const fmtMin=v=>v==null?'–':`${Math.round(v)} min.`;
 
+const RESPONSE_CATEGORIES = ['Assistance', 'Forebyggende SAR', 'Alarm SAR'];
+const isResponseCategory = r => RESPONSE_CATEGORIES.includes(String(r.category || '').trim());
+function responseRecords(records){ return records.filter(isResponseCategory); }
+function callHourEntries(records){
+  const hours = Array.from({length:24}, (_,h)=>[String(h).padStart(2,'0'),0]);
+  records.forEach(r=>{
+    const mins = parseTimeMinutes(r.alarm_time);
+    if(mins == null) return;
+    const h = Math.floor(mins / 60);
+    if(h >= 0 && h < 24) hours[h][1]++;
+  });
+  return hours;
+}
+
+
 function parseTimeMinutes(t){
   if(!t) return null;
   const m=String(t).match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
@@ -102,7 +117,46 @@ let raw=[],filtered=[],charts={},map,markers=[],stationMarkers=[],boatMarker=nul
 function unlock(){const ok=sessionStorage.getItem('dsrsOpsAccess')==='yes'||prompt('Indtast intern adgangskode')===INTERNAL_PASSWORD;if(!ok){document.getElementById('lock').classList.remove('hidden');document.getElementById('app').classList.add('hidden');return false;}sessionStorage.setItem('dsrsOpsAccess','yes');document.getElementById('lock').classList.add('hidden');document.getElementById('app').classList.remove('hidden');return true;}
 async function init(){if(!unlock())return;const res=await fetch('assets/assistancer-internal.json');raw=withCalculatedTimes((await res.json()).records);setupFilterControls(raw,applyFilters);setupMap();document.getElementById('playBtn').onclick=togglePlay;document.getElementById('timeline').oninput=e=>{currentStep=+e.target.value;renderTimeline();};applyFilters();}
 function applyFilters(){filtered=applyFilterTo(raw);updateInternal();resetTimeline();}
-function updateInternal(){const responses=filtered.map(r=>respMin(r)).filter(x=>x!=null), assists=filtered.map(r=>assistMin(r)).filter(x=>x!=null), crew=filtered.map(r=>r.crew_total).filter(x=>x>0);document.getElementById('kpiAssists').textContent=dk.format(filtered.length);document.getElementById('kpiResponse').textContent=fmtMin(mean(responses));document.getElementById('kpiResponseMedian').textContent=fmtMin(median(responses));document.getElementById('kpiAssistTime').textContent=fmtMin(mean(assists));document.getElementById('kpiCrew').textContent=mean(crew)?mean(crew).toFixed(1):'–';let stationCounts=sortedEntries(byCount(filtered,r=>r.station)).slice(0,14);renderChart(charts,'stationChart','bar',stationCounts,'Assistancer');let monthResp=Object.entries(filtered.reduce((m,r)=>{if(respMin(r)!=null){(m[r.month]=m[r.month]||[]).push(respMin(r))}return m},{})).sort().map(([k,v])=>[monthName(k),Math.round(mean(v))]);renderChart(charts,'responseChart','line',monthResp,'Gns. reaktionstid');const q=filtered.flatMap(r=>r.data_quality||[]).reduce((m,x)=>{m[x]=(m[x]||0)+1;return m},{});document.getElementById('qualityBox').innerHTML=Object.keys(q).length?sortedEntries(q).map(([k,v])=>`<div class="pill"><strong>${dk.format(v)}</strong><br>${k}</div>`).join(''):'<div class="pill">Ingen åbenlyse dataproblemer i det aktuelle filter.</div>';document.querySelector('#latestTable tbody').innerHTML=[...filtered].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,40).map(r=>`<tr><td>${r.date}</td><td>${r.station}</td><td>${r.cause}</td><td>${r.persons??'–'}</td><td>${r.rescuers??'–'}</td><td>${r.crew_total??'–'}</td><td>${fmtMin(respMin(r))}</td><td>${fmtMin(assistMin(r))}</td><td>${r.alarm_time||'–'}</td><td>${r.departure_time||'–'}</td></tr>`).join('')||'<tr><td colspan="10">Ingen data i det valgte filter.</td></tr>';document.querySelector('#stationTable tbody').innerHTML=Object.entries(filtered.reduce((m,r)=>{const k=r.station||'Ukendt';m[k]=m[k]||{n:0,resp:[],assist:[],crew:[]};m[k].n++; if(respMin(r)!=null)m[k].resp.push(respMin(r)); if(assistMin(r)!=null)m[k].assist.push(assistMin(r)); if(r.crew_total)m[k].crew.push(r.crew_total);return m},{})).sort((a,b)=>b[1].n-a[1].n).map(([st,v])=>`<tr><td>${st}</td><td>${dk.format(v.n)}</td><td>${fmtMin(mean(v.resp))}</td><td>${fmtMin(mean(v.assist))}</td><td>${mean(v.crew)?mean(v.crew).toFixed(1):'–'}</td></tr>`).join('');}
+function updateInternal(){
+  const responseData = responseRecords(filtered);
+  const responses = responseData.map(r=>respMin(r)).filter(x=>x!=null);
+  const assists = filtered.map(r=>assistMin(r)).filter(x=>x!=null);
+  const crew = filtered.map(r=>r.crew_total).filter(x=>x>0);
+
+  document.getElementById('kpiAssists').textContent = dk.format(filtered.length);
+  document.getElementById('kpiResponse').textContent = fmtMin(mean(responses));
+  document.getElementById('kpiResponseMedian').textContent = fmtMin(median(responses));
+  document.getElementById('kpiAssistTime').textContent = fmtMin(mean(assists));
+  document.getElementById('kpiCrew').textContent = mean(crew) ? mean(crew).toFixed(1) : '–';
+  const responseCount = document.getElementById('kpiResponseCount');
+  if(responseCount) responseCount.textContent = dk.format(responses.length);
+
+  let stationCounts = sortedEntries(byCount(filtered,r=>r.station)).slice(0,14);
+  renderChart(charts,'stationChart','bar',stationCounts,'Assistancer');
+
+  let monthResp = Object.entries(responseData.reduce((m,r)=>{
+    if(respMin(r)!=null){ (m[r.month]=m[r.month]||[]).push(respMin(r)); }
+    return m;
+  },{})).sort().map(([k,v])=>[monthName(k),Math.round(mean(v))]);
+  renderChart(charts,'responseChart','line',monthResp,'Gns. reaktionstid');
+
+  renderChart(charts,'callHourChart','bar',callHourEntries(filtered),'Opkald');
+
+  const q=filtered.flatMap(r=>r.data_quality||[]).reduce((m,x)=>{m[x]=(m[x]||0)+1;return m},{});
+  document.getElementById('qualityBox').innerHTML=Object.keys(q).length?sortedEntries(q).map(([k,v])=>`<div class="pill"><strong>${dk.format(v)}</strong><br>${k}</div>`).join(''):'<div class="pill">Ingen åbenlyse dataproblemer i det aktuelle filter.</div>';
+
+  document.querySelector('#latestTable tbody').innerHTML=[...filtered].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,40).map(r=>`<tr><td>${r.date}</td><td>${r.station}</td><td>${r.cause}</td><td>${r.persons??'–'}</td><td>${r.rescuers??'–'}</td><td>${r.crew_total??'–'}</td><td>${fmtMin(respMin(r))}</td><td>${fmtMin(assistMin(r))}</td><td>${r.alarm_time||'–'}</td><td>${r.departure_time||'–'}</td></tr>`).join('')||'<tr><td colspan="10">Ingen data i det valgte filter.</td></tr>';
+
+  document.querySelector('#stationTable tbody').innerHTML=Object.entries(filtered.reduce((m,r)=>{
+    const k=r.station||'Ukendt';
+    m[k]=m[k]||{n:0,resp:[],assist:[],crew:[]};
+    m[k].n++;
+    if(isResponseCategory(r) && respMin(r)!=null) m[k].resp.push(respMin(r));
+    if(assistMin(r)!=null) m[k].assist.push(assistMin(r));
+    if(r.crew_total) m[k].crew.push(r.crew_total);
+    return m;
+  },{})).sort((a,b)=>b[1].n-a[1].n).map(([st,v])=>`<tr><td>${st}</td><td>${dk.format(v.n)}</td><td>${fmtMin(mean(v.resp))}</td><td>${fmtMin(mean(v.assist))}</td><td>${mean(v.crew)?mean(v.crew).toFixed(1):'–'}</td></tr>`).join('');
+}
 
 function addStationMarkers(){
   if(!map || !window.DSRSStations) return;
