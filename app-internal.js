@@ -24,6 +24,70 @@ function hourEntries(records){
   return counts;
 }
 
+function renderResponseChart(records){
+  const ctx = document.getElementById('responseChart');
+  if(!ctx) return;
+  if(charts.responseChart) charts.responseChart.destroy();
+
+  const monthKeys = [...new Set(records
+    .filter(isResponseCategory)
+    .map(r => r.month)
+    .filter(Boolean))]
+    .sort();
+
+  const dataFor = category => monthKeys.map(month => {
+    const values = records
+      .filter(r => r.month === month && normCategory(r.category) === normCategory(category))
+      .map(r => respMin(r))
+      .filter(x => x != null);
+    return values.length ? Math.round(mean(values)) : null;
+  });
+
+  charts.responseChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: monthKeys.map(monthName),
+      datasets: [
+        {
+          label: 'Assistance',
+          data: dataFor('Assistance'),
+          tension: .25,
+          borderWidth: 3,
+          spanGaps: true
+        },
+        {
+          label: 'Forebyggende SAR',
+          data: dataFor('Forebyggende SAR'),
+          tension: .25,
+          borderWidth: 3,
+          spanGaps: true
+        },
+        {
+          label: 'Alarm SAR',
+          data: dataFor('Alarm SAR'),
+          tension: .25,
+          borderWidth: 3,
+          spanGaps: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Minutter' },
+          ticks: { precision: 0 }
+        }
+      }
+    }
+  });
+}
+
 
 function parseTimeMinutes(t){
   if(!t) return null;
@@ -140,11 +204,7 @@ function updateInternal(){
   let stationCounts = sortedEntries(byCount(filtered,r=>r.station)).slice(0,14);
   renderChart(charts,'stationChart','bar',stationCounts,'Assistancer');
 
-  let monthResp = Object.entries(responseData.reduce((m,r)=>{
-    if(respMin(r)!=null){ (m[r.month]=m[r.month]||[]).push(respMin(r)); }
-    return m;
-  },{})).sort().map(([k,v])=>[monthName(k),Math.round(mean(v))]);
-  renderChart(charts,'responseChart','line',monthResp,'Gns. reaktionstid');
+  renderResponseChart(filtered);
 
   renderChart(charts,'hourChart','bar',hourEntries(filtered),'Opkald');
 

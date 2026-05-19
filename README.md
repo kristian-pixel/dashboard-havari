@@ -26,3 +26,8 @@ V10:
 - Fjernet de tre ekstra infobokse under KPI-rækken, da Dataunderlag-boksen nu forklarer datagrundlaget.
 - Reaktionstid vises særskilt for Assistance, Forebyggende SAR og Alarm SAR.
 - Øvelse er fortsat udeladt fra reaktionstidsberegninger og reaktionstidsgrafer.
+
+
+Nyt i v5:
+- Reaktionstid pr. måned viser nu tre linjer: Assistance, Forebyggende SAR og Alarm SAR.
+- Øvelse er fortsat udeladt fra reaktionstids-KPI’er og reaktionstidsgrafer.
