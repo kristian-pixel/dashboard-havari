@@ -15,8 +15,8 @@ Nyt i v8:
 - Beholder v7-funktioner: stationer på kort, Årø-spøgelse, redningsbåd-rute, vejr og dag/nat.
 
 
-Opdatering v2:
-- Intern infoboks er lavet som mørk datagrundlag-boks i stil med medlemsdashboardet.
-- Reaktionstid beregnes kun på kategorierne Assistance, Forebyggende SAR og Alarm SAR.
-- Øvelse er udeladt fra reaktionstids-KPI, reaktionstid pr. måned og stationstabellens reaktionstid.
-- Ny graf viser opkald fordelt på tidspunkt på dagen.
+Nyt i v9:
+- Intern infoboks er lavet som mørk DSRS-dataunderlagsboks med orange venstrekant.
+- Reaktionstid beregnes kun på category: Assistance, Forebyggende SAR og Alarm SAR.
+- category: Øvelse er udeladt fra reaktionstids-KPI'er, reaktionstid pr. måned og stationstabellens gns. reaktion.
+- Ny graf: Tidspunkt på dagen for opkald, baseret på alarm_time.
