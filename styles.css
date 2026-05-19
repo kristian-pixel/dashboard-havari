@@ -170,3 +170,44 @@
 .kpis small{display:block;margin-top:4px;color:var(--muted);font-weight:800;line-height:1.25;}
 @media(max-width:1100px){.kpisSix{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:700px){.kpisSix{grid-template-columns:1fr;}}
+
+
+/* v11: choose response-time lines on monthly chart */
+.chartHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:10px;
+}
+.chartHead h2{margin-bottom:4px;}
+.responseToggles{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:flex-end;
+  min-width:270px;
+}
+.responseToggles label{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:#f8fbff;
+  color:var(--navy);
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.responseToggles input{
+  width:auto;
+  margin:0;
+  accent-color:var(--orange);
+}
+@media(max-width:900px){
+  .chartHead{display:block;}
+  .responseToggles{justify-content:flex-start;min-width:0;margin-top:10px;}
+}

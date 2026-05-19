@@ -7,7 +7,7 @@ Intern side:
 - internal.html
 - kode: dsrs2026
 
-Nyt i v8:
+Nyt i v11:
 - Tydelig offentlig disclaimer/kildeboks øverst
 - Tydelig krediteringstekst til presse og samarbejdspartnere
 - Forklaring af havariårsager under grafen
@@ -31,3 +31,7 @@ V10:
 Nyt i v5:
 - Reaktionstid pr. måned viser nu tre linjer: Assistance, Forebyggende SAR og Alarm SAR.
 - Øvelse er fortsat udeladt fra reaktionstids-KPI’er og reaktionstidsgrafer.
+
+
+V11:
+- Reaktionstidsgrafen har valg for Assistance, Forebyggende SAR og Alarm SAR, så linjer kan slås til/fra.

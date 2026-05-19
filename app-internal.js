@@ -24,13 +24,20 @@ function hourEntries(records){
   return counts;
 }
 
+function selectedResponseCategories(){
+  const checked = [...document.querySelectorAll('.responseCategoryToggle:checked')].map(el => el.value);
+  return checked.length ? checked : RESPONSE_CATEGORIES;
+}
+
 function renderResponseChart(records){
   const ctx = document.getElementById('responseChart');
   if(!ctx) return;
   if(charts.responseChart) charts.responseChart.destroy();
 
+  const selected = selectedResponseCategories();
+  const selectedSet = new Set(selected.map(normCategory));
   const monthKeys = [...new Set(records
-    .filter(isResponseCategory)
+    .filter(r => selectedSet.has(normCategory(r.category)))
     .map(r => r.month)
     .filter(Boolean))]
     .sort();
@@ -47,35 +54,19 @@ function renderResponseChart(records){
     type: 'line',
     data: {
       labels: monthKeys.map(monthName),
-      datasets: [
-        {
-          label: 'Assistance',
-          data: dataFor('Assistance'),
-          tension: .25,
-          borderWidth: 3,
-          spanGaps: true
-        },
-        {
-          label: 'Forebyggende SAR',
-          data: dataFor('Forebyggende SAR'),
-          tension: .25,
-          borderWidth: 3,
-          spanGaps: true
-        },
-        {
-          label: 'Alarm SAR',
-          data: dataFor('Alarm SAR'),
-          tension: .25,
-          borderWidth: 3,
-          spanGaps: true
-        }
-      ]
+      datasets: selected.map(category => ({
+        label: category,
+        data: dataFor(category),
+        tension: .25,
+        borderWidth: 3,
+        spanGaps: true
+      }))
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: true }
+        legend: { display: selected.length > 1 }
       },
       scales: {
         y: {
@@ -184,7 +175,7 @@ function showRescueRoute(r){
 
 let raw=[],filtered=[],charts={},map,markers=[],stationMarkers=[],boatMarker=null,stationMarker=null,routeLine=null,boatTimer=null,playTimer=null,currentStep=0;
 function unlock(){const ok=sessionStorage.getItem('dsrsOpsAccess')==='yes'||prompt('Indtast intern adgangskode')===INTERNAL_PASSWORD;if(!ok){document.getElementById('lock').classList.remove('hidden');document.getElementById('app').classList.add('hidden');return false;}sessionStorage.setItem('dsrsOpsAccess','yes');document.getElementById('lock').classList.add('hidden');document.getElementById('app').classList.remove('hidden');return true;}
-async function init(){if(!unlock())return;const res=await fetch('assets/assistancer-internal.json');raw=withCalculatedTimes((await res.json()).records);setupFilterControls(raw,applyFilters);setupMap();document.getElementById('playBtn').onclick=togglePlay;document.getElementById('timeline').oninput=e=>{currentStep=+e.target.value;renderTimeline();};applyFilters();}
+async function init(){if(!unlock())return;const res=await fetch('assets/assistancer-internal.json');raw=withCalculatedTimes((await res.json()).records);setupFilterControls(raw,applyFilters);document.querySelectorAll('.responseCategoryToggle').forEach(el=>el.addEventListener('change',updateInternal));setupMap();document.getElementById('playBtn').onclick=togglePlay;document.getElementById('timeline').oninput=e=>{currentStep=+e.target.value;renderTimeline();};applyFilters();}
 function applyFilters(){filtered=applyFilterTo(raw);updateInternal();resetTimeline();}
 function updateInternal(){
   const responseData = responseFiltered(filtered); // Assistance, Forebyggende SAR og Alarm SAR. Øvelse er udeladt.
