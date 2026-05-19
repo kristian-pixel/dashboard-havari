@@ -10,6 +10,8 @@ const normCategory = v => String(v || '').trim().toLowerCase();
 const RESPONSE_CATEGORY_SET = new Set(RESPONSE_CATEGORIES.map(normCategory));
 const isResponseCategory = r => RESPONSE_CATEGORY_SET.has(normCategory(r.category));
 const responseFiltered = records => records.filter(isResponseCategory);
+const responseByCategory = (records, category) => records.filter(r => normCategory(r.category) === normCategory(category));
+const responseMinutesFor = (records, category) => responseByCategory(records, category).map(r=>respMin(r)).filter(x=>x!=null);
 const callHour = r => {
   const m = String(r.alarm_time || '').match(/^(\d{1,2}):/);
   if(!m) return null;
@@ -121,14 +123,17 @@ function unlock(){const ok=sessionStorage.getItem('dsrsOpsAccess')==='yes'||prom
 async function init(){if(!unlock())return;const res=await fetch('assets/assistancer-internal.json');raw=withCalculatedTimes((await res.json()).records);setupFilterControls(raw,applyFilters);setupMap();document.getElementById('playBtn').onclick=togglePlay;document.getElementById('timeline').oninput=e=>{currentStep=+e.target.value;renderTimeline();};applyFilters();}
 function applyFilters(){filtered=applyFilterTo(raw);updateInternal();resetTimeline();}
 function updateInternal(){
-  const responseData = responseFiltered(filtered);
-  const responses = responseData.map(r=>respMin(r)).filter(x=>x!=null);
+  const responseData = responseFiltered(filtered); // Assistance, Forebyggende SAR og Alarm SAR. Øvelse er udeladt.
+  const responseAssistance = responseMinutesFor(filtered, 'Assistance');
+  const responsePreventive = responseMinutesFor(filtered, 'Forebyggende SAR');
+  const responseAlarm = responseMinutesFor(filtered, 'Alarm SAR');
   const assists = filtered.map(r=>assistMin(r)).filter(x=>x!=null);
   const crew = filtered.map(r=>r.crew_total).filter(x=>x>0);
 
   document.getElementById('kpiAssists').textContent = dk.format(filtered.length);
-  document.getElementById('kpiResponse').textContent = fmtMin(mean(responses));
-  document.getElementById('kpiResponseMedian').textContent = fmtMin(median(responses));
+  document.getElementById('kpiResponseAssistance').textContent = fmtMin(mean(responseAssistance));
+  document.getElementById('kpiResponsePreventive').textContent = fmtMin(mean(responsePreventive));
+  document.getElementById('kpiResponseAlarm').textContent = fmtMin(mean(responseAlarm));
   document.getElementById('kpiAssistTime').textContent = fmtMin(mean(assists));
   document.getElementById('kpiCrew').textContent = mean(crew) ? mean(crew).toFixed(1) : '–';
 

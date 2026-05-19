@@ -20,3 +20,9 @@ Nyt i v9:
 - Reaktionstid beregnes kun på category: Assistance, Forebyggende SAR og Alarm SAR.
 - category: Øvelse er udeladt fra reaktionstids-KPI'er, reaktionstid pr. måned og stationstabellens gns. reaktion.
 - Ny graf: Tidspunkt på dagen for opkald, baseret på alarm_time.
+
+
+V10:
+- Fjernet de tre ekstra infobokse under KPI-rækken, da Dataunderlag-boksen nu forklarer datagrundlaget.
+- Reaktionstid vises særskilt for Assistance, Forebyggende SAR og Alarm SAR.
+- Øvelse er fortsat udeladt fra reaktionstidsberegninger og reaktionstidsgrafer.
